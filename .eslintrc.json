@@ -13,18 +13,20 @@
     "sourceType": "module"
   },
   "plugins": [
-    "@typescript-eslint",
-    "jest"
+    "@typescript-eslint"
   ],
   "rules": {
     "semi": [
-      "error",
-      "always"
+      "2",
+      "never"
     ],
+    "no-extra-semi": "off",
     "indent": [
       "error",
       2
     ],
-    "space-before-function-paren": "off"
+    "space-before-function-paren": "off",
+    "no-use-before-define": "off",
+    "@typescript-eslint/no-use-before-define": "warn"
   }
 }

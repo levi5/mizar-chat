@@ -5,21 +5,21 @@ export default {
   collectCoverageFrom: [
     '<rootDir>/src/**/*.ts',
     '!<rootDir>/src/main/**',
-    "!<rootDir>/node_modules/**",
-    "!<rootDir>/build/**"
+    '!<rootDir>/node_modules/**',
+    '!<rootDir>/build/**'
   ],
   coveragePathIgnorePatterns: [
-    "/build/",
-    "/node_modules/"
+    '/build/',
+    '/node_modules/'
   ],
   displayName: {
-    name: "DEVELOPMENT 🔥🔥 ",
-    color: "green",
+    name: 'DEVELOPMENT 🔥🔥 ',
+    color: 'green'
   },
   testEnvironment: 'node',
   transform: {
-    ".+\\.ts$": "ts-jest"
+    '.+\\.ts$': 'ts-jest'
   },
-  testPathIgnorePatterns: ["/node_modules/"],
+  testPathIgnorePatterns: ['/node_modules/'],
   testMatch: []
-}
+};
