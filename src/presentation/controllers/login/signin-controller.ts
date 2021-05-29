@@ -1,16 +1,21 @@
+import { IAuthenticationUser } from '..';
 import MissingParamError from '../../errors/missing-param-error';
 import { IController, THttpRequest } from '../../protocols';
 
 export default class SigInController implements IController {
-  handle(httpRequest: THttpRequest): any {
-    const input = httpRequest.body;
+  constructor(private readonly authentication: IAuthenticationUser) {
+    this.authentication = authentication
+  }
+  async handle(httpRequest: THttpRequest): Promise<any> {
+    const { body } = httpRequest
 
     const requiredFields = ['email', 'password'];
     for (const fieldName of requiredFields) {
-      if (!input[fieldName]) {
-        return new MissingParamError(fieldName);
-      }
+      if (!body[fieldName])
+        return new Promise(resolve => resolve(new MissingParamError(fieldName)))
     }
+    const { email, password } = body
+    await this.authentication.auth({ email, password })
     return Promise.resolve({ body: '', statusCode: 200 });
   }
 };
