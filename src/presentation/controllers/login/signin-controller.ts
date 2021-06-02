@@ -1,5 +1,6 @@
 import { IAuthenticationUser } from '..';
-import MissingParamError from '../../errors/missing-param-error';
+import { UnauthorizedError } from '../../errors';
+import { MissingParamError } from '../../errors/missing-param-error';
 import { IController, THttpRequest } from '../../protocols';
 
 export default class SigInController implements IController {
@@ -15,7 +16,9 @@ export default class SigInController implements IController {
         return new Promise(resolve => resolve(new MissingParamError(fieldName)))
     }
     const { email, password } = body
-    await this.authentication.auth({ email, password })
+    const authResponse = await this.authentication.auth({ email, password })
+    if (!authResponse)
+      return new Promise(resolve => resolve(new UnauthorizedError()))
     return Promise.resolve({ body: '', statusCode: 200 });
   }
 };

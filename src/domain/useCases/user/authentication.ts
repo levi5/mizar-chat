@@ -5,5 +5,5 @@ export type TAuthenticationUserModel = {
 
 
 export interface IAuthenticationUser {
-  auth(authenticationParams: TAuthenticationUserModel): Promise<string>
+  auth(authenticationParams: TAuthenticationUserModel): Promise<string | boolean>
 }
