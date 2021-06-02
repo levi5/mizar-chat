@@ -1,13 +1,16 @@
-import { IAuthenticationUser, TAuthenticationUserModel } from '../index';
-import MissingParamError from '../../errors/missing-param-error'
-import { THttpRequest } from '../../protocols';
-import SigInController from './signin-controller';
+import SigInController from './signin-controller'
+import { THttpRequest } from '../../protocols'
+import { IAuthenticationUser, TAuthenticationUserModel } from '../index'
+import { MissingParamError, UnauthorizedError } from '../../errors/index'
 
 type SutTypes = {
   sut: SigInController,
   authenticationStub: IAuthenticationUser
 }
 
+const makeHttpRequest = () => ({
+  body: { email: 'any_mail.com', password: 'any_password' }
+})
 const makeAuthentication = () => {
   class AuthenticationStub implements IAuthenticationUser {
     async auth(authenticationParams: TAuthenticationUserModel): Promise<string> {
@@ -16,8 +19,6 @@ const makeAuthentication = () => {
   }
   return new AuthenticationStub()
 }
-
-
 const makeSut = (): SutTypes => {
   const authenticationStub = makeAuthentication()
   const signInController = new SigInController(authenticationStub)
@@ -42,9 +43,18 @@ describe('SignIn Controller', () => {
   })
   test("Should call userAuthentication with values corrects", async () => {
     const { sut, authenticationStub } = makeSut()
-    const httpRequest: THttpRequest = { body: { email: 'any_mail.com', password: 'any_password' } }
     const authSpy = jest.spyOn(authenticationStub, "auth")
-    await sut.handle(httpRequest)
+    await sut.handle(makeHttpRequest())
     expect(authSpy).toHaveBeenCalledWith({ email: 'any_mail.com', password: 'any_password' })
+  })
+
+  test("Should return unauthorized if userAuthentication fails", async () => {
+    const { sut, authenticationStub } = makeSut()
+    jest.spyOn(authenticationStub, "auth").mockImplementationOnce(() => {
+      return Promise.resolve(false)
+    })
+    const httpError = await sut.handle(makeHttpRequest())
+    expect(httpError).toEqual(new UnauthorizedError())
+
   })
 })
