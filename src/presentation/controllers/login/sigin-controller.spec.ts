@@ -1,17 +1,28 @@
 import SigInController from './signin-controller'
 import { THttpRequest } from '../../protocols'
-import { IAuthenticationUser, TAuthenticationUserModel } from '../index'
+import { IAuthenticationUser, IGetAccount, TAuthenticationUserModel } from '../index'
 import { MissingParamError, UnauthorizedError } from '../../errors/index'
 import { serverError, success, unauthorized } from '../../helpers'
+import { TAccountModel } from '../../../domain/model'
+
 
 type SutTypes = {
   sut: SigInController,
-  authenticationStub: IAuthenticationUser
+  authenticationStub: IAuthenticationUser,
+  getAccountStub: IGetAccount
 }
 
 const makeHttpRequest = () => ({
   body: { email: 'any_mail.com', password: 'any_password' }
 })
+const makeGetAccount = () => {
+  class GetAccount implements IGetAccount {
+    get(token: string): Promise<TAccountModel> {
+      return Promise.resolve({ user: {} })
+    }
+  }
+  return new GetAccount()
+}
 const makeAuthentication = () => {
   class AuthenticationStub implements IAuthenticationUser {
     async auth(authenticationParams: TAuthenticationUserModel): Promise<string> {
@@ -22,10 +33,12 @@ const makeAuthentication = () => {
 }
 const makeSut = (): SutTypes => {
   const authenticationStub = makeAuthentication()
-  const signInController = new SigInController(authenticationStub)
+  const getAccountStub = makeGetAccount()
+  const signInController = new SigInController(authenticationStub, getAccountStub)
   return {
     sut: signInController,
-    authenticationStub
+    authenticationStub,
+    getAccountStub
   }
 }
 
@@ -36,12 +49,14 @@ describe('SignIn Controller', () => {
     const error = await sut.handle(httpRequest);
     expect(error).toEqual(new MissingParamError('email'));
   })
+
   test('Should return MissingParamError if password field has not been passed', async () => {
     const { sut } = makeSut();
     const httpRequest: THttpRequest = { body: { email: 'any_mail.com' } }
     const error = await sut.handle(httpRequest)
     expect(error).toEqual(new MissingParamError('password'))
   })
+
   test("Should call userAuthentication with values corrects", async () => {
     const { sut, authenticationStub } = makeSut()
     const authSpy = jest.spyOn(authenticationStub, "auth")
@@ -56,7 +71,6 @@ describe('SignIn Controller', () => {
     })
     const httpError = await sut.handle(makeHttpRequest())
     expect(httpError).toEqual(unauthorized())
-
   })
 
   test("Should return success if userAuthentication not fails", async () => {
@@ -70,5 +84,13 @@ describe('SignIn Controller', () => {
     jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(new Promise((resolve, reject) => reject(new Error)))
     const httpError = await sut.handle(makeHttpRequest())
     expect(httpError).toEqual(serverError(new Error()))
+  })
+
+  test("Should call getAccount with value correct", async () => {
+    const { sut, getAccountStub } = makeSut()
+    const spyGetAccount = jest.spyOn(getAccountStub, 'get')
+    await sut.handle(makeHttpRequest())
+    const token = 'any_token'
+    expect(spyGetAccount).toHaveBeenCalledWith(token)
   })
 })
