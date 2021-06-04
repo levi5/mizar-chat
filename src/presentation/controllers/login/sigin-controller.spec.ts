@@ -2,6 +2,7 @@ import SigInController from './signin-controller'
 import { THttpRequest } from '../../protocols'
 import { IAuthenticationUser, TAuthenticationUserModel } from '../index'
 import { MissingParamError, UnauthorizedError } from '../../errors/index'
+import { success, unauthorized } from '../../helpers'
 
 type SutTypes = {
   sut: SigInController,
@@ -54,7 +55,13 @@ describe('SignIn Controller', () => {
       return Promise.resolve(false)
     })
     const httpError = await sut.handle(makeHttpRequest())
-    expect(httpError).toEqual(new UnauthorizedError())
+    expect(httpError).toEqual(unauthorized())
 
+  })
+
+  test("Should return success if userAuthentication not fails", async () => {
+    const { sut } = makeSut()
+    const httpError = await sut.handle(makeHttpRequest())
+    expect(httpError).toEqual(success('any_token'))
   })
 })
