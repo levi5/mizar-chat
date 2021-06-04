@@ -1,11 +1,15 @@
-import { IAuthenticationUser } from '..';
+import { IAuthenticationUser, IGetAccount } from '..';
 import { MissingParamError } from '../../errors/missing-param-error';
 import { serverError, success, unauthorized } from '../../helpers';
 import { IController, THttpRequest } from '../../protocols';
 
 export default class SigInController implements IController {
-  constructor(private readonly authentication: IAuthenticationUser) {
+  constructor(
+    private readonly authentication: IAuthenticationUser,
+    private readonly getAccount: IGetAccount
+  ) {
     this.authentication = authentication
+    this.getAccount = getAccount
   }
   async handle(httpRequest: THttpRequest): Promise<any> {
     try {
@@ -20,6 +24,8 @@ export default class SigInController implements IController {
       const token = await this.authentication.auth({ email, password })
       if (!token)
         return unauthorized()
+
+      await this.getAccount.get(token as string)
       return success(token)
 
     } catch (error) {
