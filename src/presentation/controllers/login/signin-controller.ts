@@ -22,6 +22,7 @@ export default class SigInController implements IController {
       }
       const { email, password } = body
       const token = await this.authentication.auth({ email, password })
+
       if (!token)
         return unauthorized()
 
