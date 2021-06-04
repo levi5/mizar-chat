@@ -2,7 +2,7 @@ import SigInController from './signin-controller'
 import { THttpRequest } from '../../protocols'
 import { IAuthenticationUser, TAuthenticationUserModel } from '../index'
 import { MissingParamError, UnauthorizedError } from '../../errors/index'
-import { success, unauthorized } from '../../helpers'
+import { serverError, success, unauthorized } from '../../helpers'
 
 type SutTypes = {
   sut: SigInController,
@@ -63,5 +63,12 @@ describe('SignIn Controller', () => {
     const { sut } = makeSut()
     const httpError = await sut.handle(makeHttpRequest())
     expect(httpError).toEqual(success('any_token'))
+  })
+
+  test("Should return 500 if Authentication throws", async () => {
+    const { sut, authenticationStub } = makeSut()
+    jest.spyOn(authenticationStub, 'auth').mockReturnValueOnce(new Promise((resolve, reject) => reject(new Error)))
+    const httpError = await sut.handle(makeHttpRequest())
+    expect(httpError).toEqual(serverError(new Error()))
   })
 })
